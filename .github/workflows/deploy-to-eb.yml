@@ -57,7 +57,7 @@ jobs:
       - name: Update Elastic Beanstalk environment
         env:
           ENV_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
-          VERSION_LABEL: ${{ github.sha }}-${{ github.run_id }}
+          VERSION_LABEL: ${{ github.sha }}-${{ github.run_number }}-${{ github.run_id }}
         run: |
           aws elasticbeanstalk update-environment \
             --environment-name "$ENV_NAME" \
