@@ -18,7 +18,7 @@ jobs:
           node-version: 18
           
       - name: Debug environment name
-        run: echo "Deploying to environment:$ENV_NAME"
+        run: echo "${{ secrets.EB_ENVIRONMENT_NAME }}"
         env:
           ENV_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
 
