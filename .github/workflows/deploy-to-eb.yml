@@ -37,24 +37,27 @@ jobs:
           S3_BUCKET="${{ secrets.EB_S3_BUCKET }}"  # replace with your bucket
           aws s3 cp app.zip s3://$S3_BUCKET/app.zip
 
-      - name: Create Elastic Beanstalk application version
+      - name: Deploy to Elastic Beanstalk
         run: |
-          APP_NAME="React Next Marketplace"
+          APP_NAME="React Next Marketplace"  # your app name with spaces
+          ENV_NAME="${{ secrets.EB_ENV_NAME }}"  # your EB environment name
+          REGION="${{ secrets.AWS_REGION }}"      # AWS region, e.g., us-east-2
+          S3_BUCKET="${{ secrets.EB_S3_BUCKET }}"   
+      
           VERSION_LABEL="v-$(date +%Y%m%d%H%M%S)"
-          S3_BUCKET="my-eb-bucket"
+      
+          echo "Uploading app.zip to S3..."
+          aws s3 cp app.zip s3://$S3_BUCKET/app.zip --region $REGION
+      
+          echo "Creating new Elastic Beanstalk application version..."
           aws elasticbeanstalk create-application-version \
-            --application-name $APP_NAME \
-            --version-label $VERSION_LABEL \
-            --source-bundle S3Bucket=$S3_BUCKET,S3Key=app.zip
-
-      - name: Update Elastic Beanstalk environment
-        run: |
-          APP_NAME="React Next Marketplace"
-          ENV_NAME="ReactNextMarketplace-env"
-          VERSION_LABEL=$(aws elasticbeanstalk describe-application-versions \
-            --application-name $APP_NAME \
-            --query "ApplicationVersions[-1].VersionLabel" \
-            --output text)
+            --application-name "$APP_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --source-bundle S3Bucket=$S3_BUCKET,S3Key=app.zip \
+            --region $REGION
+      
+          echo "Updating Elastic Beanstalk environment..."
           aws elasticbeanstalk update-environment \
-            --environment-name $ENV_NAME \
-            --version-label $VERSION_LABEL
+            --environment-name "$ENV_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --region $REGION
