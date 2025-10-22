@@ -1,49 +1,64 @@
-  - name: Set up Node
-    uses: actions/setup-node@v4
-    with:
-      node-version: '18'
+name: Deploy to AWS Elastic Beanstalk
 
-  - name: Install dependencies
-    run: npm ci --if-present
+on:
+  push:
+    branches: [ "main" ]
 
-  - name: Build (if present)
-    run: npm run build --if-present
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-  - name: Create deploy zip
-    run: |
-      VERSION_LABEL=${GITHUB_SHA}-${GITHUB_RUN_NUMBER}
-      zip -r deploy.zip . -x ".git/*" ".github/*" "node_modules/*" "deploy.zip"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  - name: Configure AWS credentials
-    uses: aws-actions/configure-aws-credentials@v2
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-  - name: Upload to S3
-    env:
-      S3_BUCKET: ${{ secrets.EB_S3_BUCKET }}
-      VERSION_LABEL: ${{ github.sha }}-${{ github.run_number }}
-    run: |
-      aws s3 cp deploy.zip s3://$S3_BUCKET/$VERSION_LABEL.zip
+      - name: Install dependencies
+        run: npm install
 
-  - name: Create Elastic Beanstalk application version
-    env:
-      APP_NAME: ${{ secrets.EB_APPLICATION_NAME }}
-      VERSION_LABEL: ${{ github.sha }}-${{ github.run_number }}
-      S3_BUCKET: ${{ secrets.EB_S3_BUCKET }}
-    run: |
-      aws elasticbeanstalk create-application-version \
-        --application-name "$APP_NAME" \
-        --version-label "$VERSION_LABEL" \
-        --source-bundle S3Bucket=$S3_BUCKET,S3Key=$VERSION_LABEL.zip
+      - name: Build project (if present)
+        run: npm run build || echo "No build step found"
 
-  - name: Update Elastic Beanstalk environment to new version
-    env:
-      ENV_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
-      VERSION_LABEL: ${{ github.sha }}-${{ github.run_number }}
-    run: |
-      aws elasticbeanstalk update-environment \
-        --environment-name "$ENV_NAME" \
-        --version-label "$VERSION_LABEL"
+      - name: Create deploy zip
+        env:
+          VERSION_LABEL: ${{ github.sha }}-${{ github.run_id }}
+        run: |
+          zip -r deploy.zip . -x ".git/*" ".github/*" "node_modules/*" "deploy.zip"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3
+        env:
+          S3_BUCKET: ${{ secrets.EB_S3_BUCKET }}
+          VERSION_LABEL: ${{ github.sha }}-${{ github.run_id }}
+        run: |
+          aws s3 cp deploy.zip s3://$S3_BUCKET/$VERSION_LABEL.zip
+
+      - name: Create Elastic Beanstalk application version
+        env:
+          APP_NAME: ${{ secrets.EB_APPLICATION_NAME }}
+          VERSION_LABEL: ${{ github.sha }}-${{ github.run_id }}
+          S3_BUCKET: ${{ secrets.EB_S3_BUCKET }}
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "$APP_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --source-bundle S3Bucket=$S3_BUCKET,S3Key=$VERSION_LABEL.zip
+
+      - name: Update Elastic Beanstalk environment
+        env:
+          ENV_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
+          VERSION_LABEL: ${{ github.sha }}-${{ github.run_id }}
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "$ENV_NAME" \
+            --version-label "$VERSION_LABEL"
