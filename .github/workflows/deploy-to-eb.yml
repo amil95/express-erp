@@ -39,10 +39,10 @@ jobs:
 
       - name: Deploy to Elastic Beanstalk
         run: |
-          APP_NAME="React Next Marketplace"  # your app name with spaces
-          ENV_NAME="${{ secrets.EB_ENV_NAME }}"  # your EB environment name
-          REGION="${{ secrets.AWS_REGION }}"      # AWS region, e.g., us-east-2
-          S3_BUCKET="${{ secrets.EB_S3_BUCKET }}"   
+          APP_NAME="${{ secrets.EB_APPLICATION_NAME }}"       # use your secret
+          ENV_NAME="${{ secrets.EB_ENVIRONMENT_NAME }}"       # use your secret
+          REGION="${{ secrets.AWS_REGION }}"
+          S3_BUCKET="${{ secrets.EB_S3_BUCKET }}"
       
           VERSION_LABEL="v-$(date +%Y%m%d%H%M%S)"
       
