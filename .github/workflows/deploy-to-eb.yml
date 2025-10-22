@@ -34,12 +34,12 @@ jobs:
 
       - name: Upload zip to S3
         run: |
-          S3_BUCKET="my-eb-bucket"  # replace with your bucket
+          S3_BUCKET="${{ secrets.EB_S3_BUCKET }}"  # replace with your bucket
           aws s3 cp app.zip s3://$S3_BUCKET/app.zip
 
       - name: Create Elastic Beanstalk application version
         run: |
-          APP_NAME="my-express-app"  # replace with your app name
+          APP_NAME="React Next Marketplace"
           VERSION_LABEL="v-$(date +%Y%m%d%H%M%S)"
           S3_BUCKET="my-eb-bucket"
           aws elasticbeanstalk create-application-version \
@@ -49,8 +49,8 @@ jobs:
 
       - name: Update Elastic Beanstalk environment
         run: |
-          APP_NAME="my-express-app"
-          ENV_NAME="my-env"  # replace with your environment name
+          APP_NAME="React Next Marketplace"
+          ENV_NAME="ReactNextMarketplace-env"
           VERSION_LABEL=$(aws elasticbeanstalk describe-application-versions \
             --application-name $APP_NAME \
             --query "ApplicationVersions[-1].VersionLabel" \
