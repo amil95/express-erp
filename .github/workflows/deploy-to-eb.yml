@@ -1,4 +1,4 @@
-name: Deploy to AWS Elastic Beanstalk Test
+name: Deploy to AWS Elastic Beanstalk Test 2
 
 on:
   push:
