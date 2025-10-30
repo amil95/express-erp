@@ -6,17 +6,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
 export const authenticate = async (req, res, next) => {
   try {
-    // 1. Get token from Authorization header
+    // get token from Authorization header
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(401).json({ message: 'Missing token' });
 
-    const token = authHeader.split(' ')[1]; // Bearer <token>
+    const token = authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Missing token' });
 
-    // 2. Verify JWT signature
+    // verify JWT signature
     const payload = jwt.verify(token, JWT_SECRET);
 
-    // 3. Check token exists in DB and is not expired
+    // check token exists in DB and is not expired
     const tokenRecord = await Auth.findOne({
       where: { token, user_uuid: payload.uuid },
       include: [{ model: User, as: 'user' }],
@@ -26,7 +26,7 @@ export const authenticate = async (req, res, next) => {
     if (new Date(tokenRecord.expires_at) < new Date())
       return res.status(401).json({ message: 'Token expired' });
 
-    // 4. Attach user to request object
+    // attach user to request object
     req.user = {
       uuid: payload.uuid,
       email: payload.email,

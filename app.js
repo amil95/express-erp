@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+
 import userRoutes from './src/routes/userRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
+import productRoutes from './src/routes/productRoutes.js';
 
 
 
@@ -17,5 +19,6 @@ app.use((req, res, next) => {
 
 app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
+app.use('/products', productRoutes);
 
 export default app;
